@@ -1,5 +1,5 @@
 import socket
-
+from classes import Client
 
 
 HOST = '127.0.0.1'
@@ -7,21 +7,12 @@ PORT = 65432
 ADDR = (HOST, PORT)
 
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client = Client()
 
-
-sock.connect(ADDR)
+client.connect(ADDR)
 
 print("--> You can close the program by enter '.exitexit' command <--")
 
-inp = ''
+client.start()
 
-while inp != '.exitexit':
-    inp = input()
-    
-    sock.sendall(inp.encode())
-    data = sock.recv(1024)
-    print("From server:")
-    print(data)
 
-sock.close()
