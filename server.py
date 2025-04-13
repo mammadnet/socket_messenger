@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 HOST = os.getenv('HOST')
-PORT = os.getenv('PORT')
+PORT = int(os.getenv('PORT'))
 ADDR = (HOST, PORT)
 
 server = Server(host=HOST, port=PORT)
