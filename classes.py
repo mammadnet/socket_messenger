@@ -87,7 +87,8 @@ class Server(socket.socket):
             print("INSIDE WHILE")
     
     def print_msg(self, msg, addr):
-        print(f'{addr} --> "{msg}"')
+        msg = msg.decode()
+        print(f'{addr[0]}:{addr[1]} --> "{msg[msg.find('}')+1:]}"')
             
             
         
