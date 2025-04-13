@@ -1,8 +1,12 @@
 import socket
 from classes import Server
 
-HOST = '127.0.0.1'
-PORT = 65432
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+HOST = os.getenv('HOST')
+PORT = os.getenv('PORT')
 ADDR = (HOST, PORT)
 
 server = Server(host=HOST, port=PORT)
