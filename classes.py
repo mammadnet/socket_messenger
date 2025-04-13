@@ -33,7 +33,7 @@ class Server(socket.socket):
                 connected = False
                 break
             
-            self.send_to_all_client(data)
+            self.send_to_all_client(conn, data)
             msg_handler(data, addr)
     
     
@@ -69,10 +69,11 @@ class Server(socket.socket):
         return data_with_length
         
         
-    def send_to_all_client(self, data):
+    def send_to_all_client(self,sender_client, data):
         
         for client in self.conections:
-            client.sendall(data)
+            if client != sender_client: 
+                client.sendall(data)
             
             
     def start(self):
