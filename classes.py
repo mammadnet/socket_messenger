@@ -109,10 +109,13 @@ class Client(socket.socket):
     
     def start(self):
             
+        
+        threading.Thread(target=self.msg_receive_handler).start()
+        
         connected = True
         while connected:
             msg = self.get_input()
-            data = self.atach_header(msg)
+            data = self.atach_data_length(msg)
             self.sendall(data)
     
     def get_input(self):
@@ -120,11 +123,44 @@ class Client(socket.socket):
         
         return inp
     
-    def atach_header(self, msg:str):
+    def atach_data_length(self, msg:str):
         msg_length = len(msg)
         
         header = str(msg_length).ljust(self.header_length, ' ')
         return (header + msg).encode()
+    
+    
+    def separate_sender_addr(self, data):
+        
+        addr_end = data.find(b'}')
+        
+        sender_addr = data[0:addr_end+1]
+        
+        return (json.loads(sender_addr), data[addr_end+1:])
+    
+    
+    def msg_receive_handler(self):
+        
+        while True:
+            data_length = self.recv(self.header_length)
+            
+            data_length = int(data_length.strip())
+            
+            data = self.recv(data_length)
+            
+            sender_addr, msg = self.separate_sender_addr(data)
+            
+            if not msg:
+                break
+            
+            self.print_msg(sender_addr, msg)
+            
+            
+        
+    
+    def print_msg(self, addr, msg):
+        
+        print(f'{addr['host']}:{addr['port']} --> {msg}')
         
         
         
