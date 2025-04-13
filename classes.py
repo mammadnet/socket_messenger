@@ -46,13 +46,13 @@ class Server(socket.socket):
         return msg_length
     
     
-    def atach_header(self, msg:str):
+    def attach_header(self, msg:str):
         msg_length = len(msg)
         
         header = str(msg_length).ljust(self.header_length, ' ')
         return (header + msg).encode()
     
-    def atach_sender_addr(self, addr, msg):
+    def attach_sender_addr(self, addr, msg):
         data = {
             'host':addr[0],
             'port':addr[1]
@@ -63,8 +63,8 @@ class Server(socket.socket):
         return data+msg
     
     def decorate_msg(self, addr, msg):
-        data_with_addr = self.atach_sender_addr(addr, msg)
-        data_with_length = self.atach_header(data_with_addr)
+        data_with_addr = self.attach_sender_addr(addr, msg)
+        data_with_length = self.attach_header(data_with_addr)
         
         return data_with_length
         
@@ -115,7 +115,7 @@ class Client(socket.socket):
         connected = True
         while connected:
             msg = self.get_input()
-            data = self.atach_data_length(msg)
+            data = self.attach_data_length(msg)
             self.sendall(data)
     
     def get_input(self):
@@ -123,7 +123,7 @@ class Client(socket.socket):
         
         return inp
     
-    def atach_data_length(self, msg:str):
+    def attach_data_length(self, msg:str):
         msg_length = len(msg)
         
         header = str(msg_length).ljust(self.header_length, ' ')
