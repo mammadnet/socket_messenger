@@ -161,7 +161,7 @@ class Client(socket.socket):
     
     def print_msg(self, addr, msg):
         
-        print(f'{addr['host']}:{addr['port']} --> {msg}')
+        print(f'{addr['host']}:{addr['port']} --> {msg.decode()}')
         
         
         
