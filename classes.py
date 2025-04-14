@@ -29,12 +29,13 @@ class Server(socket.socket):
             data_length = self.read_header(header)
             received_msg  = conn.recv(data_length).decode()
             data = self.decorate_msg(addr, received_msg)
+            data_with_length = self.attach_header(data)
             if not received_msg:
                 connected = False
                 break
             
-            self.send_to_all_client(conn, data)
-            msg_handler(data, addr)
+            self.send_to_all_client(conn, data_with_length)
+            msg_handler(json.loads(data))
     
     
     def read_header(self, header:str) -> int:
@@ -63,10 +64,14 @@ class Server(socket.socket):
         return data+msg
     
     def decorate_msg(self, addr, msg):
-        data_with_addr = self.attach_sender_addr(addr, msg)
-        data_with_length = self.attach_header(data_with_addr)
+        data_with_addr = {
+            'host':addr[0],
+            'port':addr[1],
+            'msg': msg
+        }
+        data = json.dumps(data_with_addr)
         
-        return data_with_length
+        return data
         
         
     def send_to_all_client(self,sender_client, data):
@@ -86,9 +91,8 @@ class Server(socket.socket):
             thread.start()
             print("INSIDE WHILE")
     
-    def print_msg(self, msg, addr):
-        msg = msg.decode()
-        print(f'{addr[0]}:{addr[1]} --> "{msg[msg.find('}')+1:]}"')
+    def print_msg(self, data):
+        print(f'{data['host']}:{data['port']} --> "{data['msg']}"')
             
             
         
@@ -150,19 +154,19 @@ class Client(socket.socket):
             
             data = self.recv(data_length)
             
-            sender_addr, msg = self.separate_sender_addr(data)
+            data = json.loads(data)
             
-            if not msg:
+            if not data['msg']:
                 break
             
-            self.print_msg(sender_addr, msg)
+            self.print_msg(data)
             
             
         
     
-    def print_msg(self, addr, msg):
+    def print_msg(self, data):
         
-        print(f'{addr['host']}:{addr['port']} --> {msg.decode()}')
+        print(f'{data['host']}:{data['port']} --> {data['msg']}')
         
         
         
