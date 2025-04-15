@@ -155,23 +155,6 @@ class Client(socket.socket):
         self.data_handler_callback = data_handler_callback
         
     
-    def start(self):
-            
-        # Waiting for get username from user and send it to server
-        username = self.get_username()
-        self.send_initialize_data(username)
-        threading.Thread(target=self.msg_receive_handler).start()
-        
-        connected = True
-        while connected:
-            msg = self.get_input()
-            data = self.decorate_msg(type='msg', msg=msg)
-            
-            # Dump dict to string
-            data = json.dumps(data)
-            data_with_length = self.attach_data_length(data)
-            self.sendall(data_with_length)
-    
     def get_input(self):
         inp = input()
         
@@ -195,7 +178,7 @@ class Client(socket.socket):
     def route_received_data(self, data):
         data_handler = self.data_handler_callback if self.data_handler_callback else self.print_msg
         if data['type'] == 'init':
-            self.initializer(data)
+            pass
         
         elif data['type'] == 'msg':
             data_handler(data)
@@ -215,8 +198,23 @@ class Client(socket.socket):
         data_with_length = self.attach_data_length(json.dumps(initialize))
         self.sendall(data_with_length)
     
-    def initializer(self, data):
-        self.set_id(data['id'])
+    # For connect to server and send username in first of connection
+    def initializer(self, username):
+        try:
+            self.connect((self.ADDR))
+            self.send_initialize_data(username)
+            threading.Thread(target=self.msg_receive_handler).start()
+            return True
+        except Exception:
+            return False
+        
+    # Send data by passing data to it
+    # The data value is dict and this format is {type:'msg', msg:<message>} of in close connection {type:'terminate'}
+    def send_data(self, data:dict):
+        # Dump dict to string
+        data = json.dumps(data)
+        data_with_length = self.attach_data_length(data)
+        self.sendall(data_with_length)
         
     def decorate_msg(self, type, msg):
         data_with_metadata = {
