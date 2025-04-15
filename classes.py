@@ -3,6 +3,22 @@ import threading
 
 import json
 
+# for manage connection in server side
+class Server_client:
+    def __init__(self, conn:socket.socket, host:str, port:int, username:str):
+        self.conn = conn
+        self.host = host
+        self.port = port
+        self.username = username
+        
+    def send_data(self, data):
+        if type(data) != bytes:
+            data = data.encode()
+        self.conn.sendall(data)
+    
+    def close(self):
+        self.conn.close()
+
 class Server(socket.socket):
     def __init__(self, host:str='127.0.0.1', port:int=65432, header_length=64, msg_handler_callback=None):
         super().__init__(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,27 +31,37 @@ class Server(socket.socket):
         
         self.bind((host, port))
         
-        self.conections:set[socket.socket] = set()
+        self.conections:set[Server_client] = set()
 
         
-    def _client_handler(self, conn:socket, addr):
+    def _client_handler(self, conn:socket.socket, addr):
         
         msg_handler = self.msg_handler_callback if self.msg_handler_callback else self.print_msg
         
-        connected = True
         
+        # waiting for get username in first of connection
+        header = conn.recv(self.header_length)
+        data_length = self.read_header(header)
+        received_msg  = conn.recv(data_length).decode()
+        received_msg = json.loads(received_msg)
+        client = Server_client(conn, addr[0], addr[1], received_msg['username'])
+        self.conections.add(client)
+        
+        connected = True
         while connected:
-            header = conn.recv(self.header_length)
-            data_length = self.read_header(header)
-            received_msg  = conn.recv(data_length).decode()
-            data = self.decorate_msg(addr, received_msg)
-            data_with_length = self.attach_header(data)
-            if not received_msg:
-                connected = False
-                break
-            
-            self.send_to_all_client(conn, data_with_length)
-            msg_handler(json.loads(data))
+            try:
+                header = client.conn.recv(self.header_length)
+                data_length = self.read_header(header)
+                received_msg  = client.conn.recv(data_length).decode()
+                data = self.decorate_msg(client, received_msg)
+                data_with_length = self.attach_header(data)
+                
+                self.send_to_all_client(client, data_with_length)
+                msg_handler(json.loads(data))
+            except Exception as e:
+                self.conections.remove(client)
+                print("ERROR-->", e)
+                client.close()
     
     
     def read_header(self, header:str) -> int:
@@ -63,22 +89,24 @@ class Server(socket.socket):
         
         return data+msg
     
-    def decorate_msg(self, addr, msg):
+    def decorate_msg(self, sender_client:Server_client, msg):
         data_with_addr = {
-            'host':addr[0],
-            'port':addr[1],
-            'msg': msg
+            'host':sender_client.host,
+            'port':sender_client.port,
+            'username':sender_client.username,
         }
+        msg = json.loads(msg)
+        data_with_addr |= msg
         data = json.dumps(data_with_addr)
         
         return data
         
         
-    def send_to_all_client(self,sender_client, data):
+    def send_to_all_client(self,sender_client:Server_client, data):
         
         for client in self.conections:
             if client != sender_client: 
-                client.sendall(data)
+                client.send_data(data)
             
             
     def start(self):
@@ -86,10 +114,11 @@ class Server(socket.socket):
         
         while True:
             conn, addr = self.accept()
-            self.conections.add(conn)
             thread = threading.Thread(target=self._client_handler, args=(conn, addr))
             thread.start()
             print("INSIDE WHILE")
+    
+    
     
     def print_msg(self, data):
         print(f'{data['host']}:{data['port']} --> "{data['msg']}"')
@@ -100,6 +129,9 @@ class Server(socket.socket):
         self.sendall(msg.encode())
         
         
+#------------------------------------------------------------------------
+
+
 
 class Client(socket.socket):
     
@@ -115,14 +147,20 @@ class Client(socket.socket):
     
     def start(self):
             
-        
+        # Waiting for get username from user and send it to server
+        username = self.get_username()
+        self.send_initialize_data(username)
         threading.Thread(target=self.msg_receive_handler).start()
         
         connected = True
         while connected:
             msg = self.get_input()
-            data = self.attach_data_length(msg)
-            self.sendall(data)
+            data = self.decorate_msg(type='msg', msg=msg)
+            
+            # Dump dict to string
+            data = json.dumps(data)
+            data_with_length = self.attach_data_length(data)
+            self.sendall(data_with_length)
     
     def get_input(self):
         inp = input()
@@ -144,6 +182,37 @@ class Client(socket.socket):
         
         return (json.loads(sender_addr), data[addr_end+1:])
     
+    def route_received_data(self, data):
+        if data['type'] == 'init':
+            self.initializer(data)
+        
+        elif data['type'] == 'msg':
+            self.print_msg(data)
+        
+        elif data['type'] == 'setup':
+            
+            pass
+
+    # Get and send username to server
+    def get_username(self):
+        username = input("Enter your username-->")
+        self.set_id(username)
+        return username
+        
+    def send_initialize_data(self, username):
+        initialize = {'type':'initializer', 'username':username}
+        data_with_length = self.attach_data_length(json.dumps(initialize))
+        self.sendall(data_with_length)
+    
+    def initializer(self, data):
+        self.set_id(data['id'])
+        
+    def decorate_msg(self, type, msg):
+        data_with_metadata = {
+            'type':type,
+            'msg': msg
+        }
+        return data_with_metadata
     
     def msg_receive_handler(self):
         
@@ -156,17 +225,15 @@ class Client(socket.socket):
             
             data = json.loads(data)
             
-            if not data['msg']:
-                break
+            self.route_received_data(data)
             
-            self.print_msg(data)
-            
-            
+        
+    def set_id(self, id):
+        self.id = id
         
     
     def print_msg(self, data):
         
-        print(f'{data['host']}:{data['port']} --> {data['msg']}')
-        
+        print(f'{data['host']}:{data['port']} --{data['username']}--> {data['msg']}')
         
         
