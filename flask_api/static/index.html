@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Form -->
+        <div id="login-container" class="login-container">
+            <h2>Welcome to Chat</h2>
+            <form id="login-form">
+                <input type="text" id="username-input" placeholder="Enter your username" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- Chat Container (hidden initially) -->
+        <div id="chat-container" class="chat-container" style="display: none;">
+            <div class="chat-header">
+                <h2>Welcome, <span id="username-display"></span></h2>
+                <div class="connection-status">
+                    <span id="status-indicator" class="status-indicator disconnected"></span>
+                    <span id="status-text">Disconnected</span>
+                    <button id="logout-button" class="logout-button">Logout</button>
+                </div>
+            </div>
+            
+            <div id="chat-box" class="chat-box">
+                <div id="messages-container" class="messages-container">
+                    <!-- Messages will be added here dynamically -->
+                </div>
+            </div>
+            
+            <form id="message-form" class="message-input-container">
+                <input type="text" id="message-input" placeholder="Type a message..." class="message-input">
+                <button type="submit" class="send-button">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html> 

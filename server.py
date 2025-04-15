@@ -15,7 +15,7 @@ server.start()
 
 print(f'Server is listening on host {HOST} and port {PORT}...')
 
-print(f'A connection was accepted by address {addr}')
+print(f'A connection was accepted by address {ADDR}')
 
 
 
