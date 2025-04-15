@@ -160,6 +160,9 @@ class Client(socket.socket):
         self.data_handler_callback = data_handler_callback
         
     
+    def set_receive_data_handler(self, callback):
+        self.data_handler_callback = callback
+    
     def get_input(self):
         inp = input()
         
