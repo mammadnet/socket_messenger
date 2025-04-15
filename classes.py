@@ -193,7 +193,7 @@ class Client(socket.socket):
         return (json.loads(sender_addr), data[addr_end+1:])
     
     def route_received_data(self, data):
-        data_handler = self.data_handler_callback if self.msg_handler_callback else self.print_msg
+        data_handler = self.data_handler_callback if self.data_handler_callback else self.print_msg
         if data['type'] == 'init':
             self.initializer(data)
         
