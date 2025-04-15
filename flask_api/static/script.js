@@ -194,6 +194,9 @@ async function fetchMessages() {
 
 function renderMessages(newMessages) {
     newMessages.forEach(message => {
+        // Skip messages that are missing user or message text
+        if (!message.user || !message.message) return;
+
         const messageElement = document.createElement('div');
         messageElement.className = `message ${message.user === username ? 'sent' : 'received'}`;
         
