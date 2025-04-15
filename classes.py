@@ -39,25 +39,21 @@ class Server(socket.socket):
         msg_handler = self.msg_handler_callback if self.msg_handler_callback else self.print_msg
         
         
-        # waiting for get username in first of connection
-        header = conn.recv(self.header_length)
-        data_length = self.read_header(header)
-        received_msg  = conn.recv(data_length).decode()
-        received_msg = json.loads(received_msg)
-        client = Server_client(conn, addr[0], addr[1], received_msg['username'])
+        # Waiting for get username in first of connection
+        username = self.get_username_from_client(conn)
+        client = Server_client(conn, addr[0], addr[1], username)
         self.conections.add(client)
         
         connected = True
         while connected:
             try:
-                header = client.conn.recv(self.header_length)
-                data_length = self.read_header(header)
-                received_msg  = client.conn.recv(data_length).decode()
+                received_msg  = self.get_data_from_client(client)
                 data = self.decorate_msg(client, received_msg)
-                data_with_length = self.attach_header(data)
+                dumped_data = json.dumps(data)
+                data_with_length = self.attach_header(dumped_data)
                 
                 self.send_to_all_client(client, data_with_length)
-                msg_handler(json.loads(data))
+                msg_handler(data)
             except Exception as e:
                 self.conections.remove(client)
                 print("ERROR-->", e)
@@ -72,6 +68,18 @@ class Server(socket.socket):
             msg_length = 0
         return msg_length
     
+    def get_data_from_client(self, client:Server_client) -> dict:
+        header = client.conn.recv(self.header_length)
+        data_length = self.read_header(header)
+        received_data  = client.conn.recv(data_length).decode()
+        return json.loads(received_data)
+        
+    def get_username_from_client(self, conn:socket.socket):
+        header = conn.recv(self.header_length)
+        data_length = self.read_header(header)
+        received_data  = conn.recv(data_length).decode()
+        data = json.loads(received_data)
+        return data['username']
     
     def attach_header(self, msg:str):
         msg_length = len(msg)
@@ -89,17 +97,17 @@ class Server(socket.socket):
         
         return data+msg
     
-    def decorate_msg(self, sender_client:Server_client, msg):
+    def decorate_msg(self, sender_client:Server_client, msg:dict):
         data_with_addr = {
             'host':sender_client.host,
             'port':sender_client.port,
             'username':sender_client.username,
         }
-        msg = json.loads(msg)
-        data_with_addr |= msg
-        data = json.dumps(data_with_addr)
         
-        return data
+        data_with_addr |= msg
+        
+        return data_with_addr
+    
         
         
     def send_to_all_client(self,sender_client:Server_client, data):
