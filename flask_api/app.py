@@ -64,19 +64,29 @@ def login():
     return jsonify({"message": "Login successful"}), 200    
 
 
+
 @app.route('/messages', methods=['GET'])
 def get_messages():
     return jsonify(messages), 200
 
 
-
 def add_message(message):
-    
-    pass
+    if message.get("id") not in message_ids:
+        messages.append(message)
+        message_ids.add(message.get("id"))
+        print(f"Added message: {message.get('id')}")
+    else:
+        print(f"Message {message.get('id')} already exists")
 
 def handle_received_message(message):
-    pass
-
+    if "id" not in message:
+        message["id"] = generate_message_id("received", "unknown")
+    
+    if message.get("id") in message_ids:
+        print(f"Skipping duplicate message in callback: {message.get('id')}")
+        return
+    
+    add_message(message)
 
 if __name__ == '__main__':
     app.run(debug=True)
