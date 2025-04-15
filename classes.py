@@ -43,7 +43,7 @@ class Server(socket.socket):
         username = self.get_username_from_client(conn)
         client = Server_client(conn, addr[0], addr[1], username)
         self.conections.add(client)
-        
+        self.new_connection_notif(client)
         connected = True
         while connected:
             try:
@@ -124,7 +124,6 @@ class Server(socket.socket):
             conn, addr = self.accept()
             thread = threading.Thread(target=self._client_handler, args=(conn, addr))
             thread.start()
-            print("INSIDE WHILE")
     
     
     
@@ -132,7 +131,10 @@ class Server(socket.socket):
         print(f'{data['host']}:{data['port']} --> "{data['msg']}"')
             
             
-        
+    
+    def new_connection_notif(self, client:Server_client):
+        print(f'NEWCONNECTION:{client.username} connected with host {client.host}:{client.port}')
+    
     def sendmsg(self, msg:str):
         self.sendall(msg.encode())
         
@@ -191,11 +193,12 @@ class Client(socket.socket):
         return (json.loads(sender_addr), data[addr_end+1:])
     
     def route_received_data(self, data):
+        msg_handler = self.msg_handler_callback if self.msg_handler_callback else self.print_msg
         if data['type'] == 'init':
             self.initializer(data)
         
         elif data['type'] == 'msg':
-            self.print_msg(data)
+            msg_handler(data)
         
         elif data['type'] == 'setup':
             
