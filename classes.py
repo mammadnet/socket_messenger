@@ -41,6 +41,13 @@ class Server(socket.socket):
         
         # Waiting for get username in first of connection
         username = self.get_username_from_client(conn)
+        ack = {
+            "type": "init",
+            "msg": f"Welcome {username}!"
+        }
+        ack_msg = self.attach_header(json.dumps(ack))
+        conn.sendall(ack_msg)
+
         client = Server_client(conn, addr[0], addr[1], username)
         self.conections.add(client)
         self.new_connection_notif(client)
@@ -158,36 +165,31 @@ class Client(socket.socket):
         
         self.header_length = header_length
         self.data_handler_callback = data_handler_callback
-        
+        self.is_connected = False
+        self.id = None
     
     def set_receive_data_handler(self, callback):
         self.data_handler_callback = callback
     
     def get_input(self):
         inp = input()
-        
         return inp
     
     def attach_data_length(self, msg:str):
         msg_length = len(msg)
-        
         header = str(msg_length).ljust(self.header_length, ' ')
         return (header + msg).encode()
     
-    
     def separate_sender_addr(self, data):
-        
         addr_end = data.find(b'}')
-        
         sender_addr = data[0:addr_end+1]
-        
         return (json.loads(sender_addr), data[addr_end+1:])
     
     def route_received_data(self, data):
         data_handler = self.data_handler_callback if self.data_handler_callback else self.print_msg
         if data['type'] == 'init':
-            pass
-        
+            self.is_connected = True
+            return
         elif data['type'] == 'msg':
             data_handler(data)
         
@@ -198,8 +200,8 @@ class Client(socket.socket):
     def close_connection(self):
         data = {'type':'terminate'}
         self.send_data(data)
+        self.is_connected = False
 
-    # Get and send username to server
     def get_username(self):
         username = input("Enter your username-->")
         self.set_id(username)
@@ -210,20 +212,19 @@ class Client(socket.socket):
         data_with_length = self.attach_data_length(json.dumps(initialize))
         self.sendall(data_with_length)
     
-    # For connect to server and send username in first of connection
     def initializer(self, username):
         try:
-            self.connect((self.ADDR))
+            self.connect(self.ADDR)
             self.send_initialize_data(username)
+            self.id = username
             threading.Thread(target=self.msg_receive_handler, daemon=True).start()
             return True
         except Exception:
             return False
         
-    # Send data by passing data to it
-    # The data value is dict and this format is {type:'msg', msg:<message>} of in close connection {type:'terminate'}
     def send_data(self, data:dict):
-        # Dump dict to string
+        if isinstance(data, str):
+            data = {'type': 'msg', 'msg': data}
         data = json.dumps(data)
         data_with_length = self.attach_data_length(data)
         self.sendall(data_with_length)
@@ -236,23 +237,21 @@ class Client(socket.socket):
         return data_with_metadata
     
     def msg_receive_handler(self):
-        
         while True:
-            data_length = self.recv(self.header_length)
-            
-            data_length = int(data_length.strip())
-            
-            data = self.recv(data_length)
-            
-            data = json.loads(data)
-            
-            self.route_received_data(data)
-            
-        
+            try:
+                data_length = self.recv(self.header_length)
+                data_length = int(data_length.strip())
+                data = self.recv(data_length)
+                data = json.loads(data)
+                self.route_received_data(data)
+            except Exception as e:
+                print(f"Error in receive handler: {e}")
+                self.is_connected = False
+                break
+    
     def set_id(self, id):
         self.id = id
         
-    
     def print_msg(self, data):
         
         print(f'{data['host']}:{data['port']} --{data['username']}--> {data['msg']}')
