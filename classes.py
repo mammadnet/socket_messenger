@@ -145,14 +145,14 @@ class Server(socket.socket):
 
 class Client(socket.socket):
     
-    def __init__(self, host:str='127.0.0.1', port:int=65432, header_length=64, msg_handler_callback=None):
+    def __init__(self, host:str='127.0.0.1', port:int=65432, header_length=64, data_handler_callback=None):
         super().__init__(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.port = port
         self.ADDR = (host, port)
         
         self.header_length = header_length
-        self.msg_handler_callback = msg_handler_callback
+        self.data_handler_callback = data_handler_callback
         
     
     def start(self):
@@ -193,12 +193,12 @@ class Client(socket.socket):
         return (json.loads(sender_addr), data[addr_end+1:])
     
     def route_received_data(self, data):
-        msg_handler = self.msg_handler_callback if self.msg_handler_callback else self.print_msg
+        data_handler = self.data_handler_callback if self.msg_handler_callback else self.print_msg
         if data['type'] == 'init':
             self.initializer(data)
         
         elif data['type'] == 'msg':
-            msg_handler(data)
+            data_handler(data)
         
         elif data['type'] == 'setup':
             
