@@ -48,6 +48,11 @@ class Server(socket.socket):
         while connected:
             try:
                 received_msg  = self.get_data_from_client(client)
+                if received_msg['type'] == "terminate":
+                    self.conections.remove(client)
+                    print(f'**{client.username} disconnected**')
+                    client.close()
+                    break
                 data = self.decorate_msg(client, received_msg)
                 dumped_data = json.dumps(data)
                 data_with_length = self.attach_header(dumped_data)
@@ -186,6 +191,10 @@ class Client(socket.socket):
         elif data['type'] == 'setup':
             
             pass
+    
+    def close_connection(self):
+        data = {'type':'terminate'}
+        self.send_data(data)
 
     # Get and send username to server
     def get_username(self):
@@ -203,7 +212,7 @@ class Client(socket.socket):
         try:
             self.connect((self.ADDR))
             self.send_initialize_data(username)
-            threading.Thread(target=self.msg_receive_handler).start()
+            threading.Thread(target=self.msg_receive_handler, daemon=True).start()
             return True
         except Exception:
             return False
