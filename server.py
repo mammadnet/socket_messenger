@@ -1,4 +1,3 @@
-import socket
 from endpoints import Server
 
 from dotenv import load_dotenv
@@ -15,7 +14,6 @@ print(f'Server is listening on host {HOST} and port {PORT}...')
 
 server.start()
 
-print(f'A connection was accepted by address {ADDR}')
 
 
 
