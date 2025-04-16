@@ -1,5 +1,4 @@
-import socket
-from classes import Client
+from endpoints import Client
 
 import os
 from dotenv import load_dotenv
