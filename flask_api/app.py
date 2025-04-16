@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from classes import Client
+from endpoints import Client
 
 # Load environment variables
 load_dotenv()

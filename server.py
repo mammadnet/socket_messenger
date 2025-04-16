@@ -1,5 +1,5 @@
 import socket
-from classes import Server
+from endpoints import Server
 
 from dotenv import load_dotenv
 import os
