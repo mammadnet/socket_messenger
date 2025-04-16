@@ -31,7 +31,7 @@ class Server(socket.socket):
         
         self.bind((host, port))
         
-        self.conections:set[Server_client] = set()
+        self.connections:set[Server_client] = set()
 
         
     def _client_handler(self, conn:socket.socket, addr):
@@ -49,14 +49,14 @@ class Server(socket.socket):
         conn.sendall(ack_msg)
 
         client = Server_client(conn, addr[0], addr[1], username)
-        self.conections.add(client)
+        self.connections.add(client)
         self.new_connection_notif(client)
         connected = True
         while connected:
             try:
                 received_msg  = self.get_data_from_client(client)
                 if received_msg['type'] == "terminate":
-                    self.conections.remove(client)
+                    self.connections.remove(client)
                     print(f'**{client.username} disconnected**')
                     client.close()
                     break
@@ -67,7 +67,7 @@ class Server(socket.socket):
                 self.send_to_all_client(client, data_with_length)
                 msg_handler(data)
             except Exception as e:
-                self.conections.remove(client)
+                self.connections.remove(client)
                 print("ERROR-->", e)
                 client.close()
     
@@ -124,7 +124,7 @@ class Server(socket.socket):
         
     def send_to_all_client(self,sender_client:Server_client, data):
         
-        for client in self.conections:
+        for client in self.connections:
             if client != sender_client: 
                 client.send_data(data)
             
