@@ -7,13 +7,14 @@ On the client side, data is also sent to the server using the socket library.
 
 The **GUI** is built with **Flask**, and it runs in the system’s web browser.
 
-### [run server](#run-server)
+## Sections
+**[run server](#run-server)**
 
-### [GUI client](#gui-client)
+**[GUI client](#gui-client)**
 
-### [CLI client](#cli-client)
+**[CLI client](#cli-client)**
 
-### [Preview](#preview)
+**[Preview](#preview)**
 
 
 ### Requirements
