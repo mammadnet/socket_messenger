@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-HOST = os.getenv('HOST')
-PORT = int(os.getenv('PORT'))
+HOST = os.getenv('HOST', 'localhost')
+PORT = int(os.getenv('PORT', '5000'))
 ADDR = (HOST, PORT)
 
 server = Server(host=HOST, port=PORT)
