@@ -1,6 +1,8 @@
 # Socket messenger
 
 
+![Socket messenger preview image](./preview.gif)
+
 ### A simple application for transferring text data from one client to all clients connected to the server.
 The server side of this app is implemented using Python’s socket library, and data is transmitted via the **TCP** protocol.
 On the client side, data is also sent to the server using the socket library.
@@ -8,13 +10,13 @@ On the client side, data is also sent to the server using the socket library.
 The **GUI** is built with **Flask**, and it runs in the system’s web browser.
 
 ## Sections
+**[Requirements](#requirements)**
+
 **[run server](#run-server)**
 
 **[GUI client](#gui-client)**
 
 **[CLI client](#cli-client)**
-
-**[Preview](#preview)**
 
 
 ### Requirements
@@ -74,6 +76,4 @@ python CLI_client.py
 ```
 
 
-## Preview
-![Preview image](./preview.gif)
 
