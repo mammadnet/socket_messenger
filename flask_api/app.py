@@ -13,8 +13,6 @@ from endpoints import Client
 load_dotenv()
 HOST = os.getenv('HOST', 'localhost')
 PORT = int(os.getenv('PORT', 5000))
-FLASK_HOST = os.getenv('FLASK_HOST', 'localhost')
-FlASK_PORT = int(os.getenv('FLASK_PORT', 5001))
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
@@ -134,6 +132,3 @@ def logout():
     messages.append(system_message)
     
     return jsonify({"message": "Logout successful"}), 200
-
-if __name__ == '__main__':
-    app.run(host=FLASK_HOST, port=FlASK_PORT, debug=True)
