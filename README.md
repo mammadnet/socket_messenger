@@ -58,9 +58,9 @@ FLASK_PORT = "<PORT NUMBER>"
 
 > By default, the Flask IP and port are set to **127.0.0.1** and **5001**.
 
-Then start the app.py file:
+Then run the **GUI_client.py** file:
 ```
-python flask_api/app.py
+python GUI_client.py
 ```
 
 _Then this file give you a **url**, paste it to browsers to access the GUI_
